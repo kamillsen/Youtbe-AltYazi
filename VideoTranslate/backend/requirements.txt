@@ -1,0 +1,20 @@
+# FastAPI & Server
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# YouTube
+yt-dlp>=2023.0.0
+
+# Transcription (Whisper)
+openai-whisper>=20230314
+
+# Translation
+transformers>=4.30.0
+torch>=2.0.0
+sentencepiece>=0.1.99
+
+# NLP
+nltk>=3.8.0
+pandas>=2.0.0
+

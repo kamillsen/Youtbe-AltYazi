@@ -1,0 +1,37 @@
+# 👉 Sanal ortam klasörleri
+venv/
+.venv/
+env/
+.myenv/
+myenv*/
+backend/myenv310/
+backend/.venv/
+
+# 👉 Derlenmiş Python dosyaları
+__pycache__/
+*.py[cod]
+*.so
+
+# 👉 Log dosyaları
+*.log
+
+# 👉 Jupyter Notebook kontrol dosyaları
+.ipynb_checkpoints/
+
+# 👉 VSCode ayar dosyaları
+.vscode/
+
+# 👉 IDE & sistem dosyaları
+*.DS_Store
+*.idea/
+
+# 👉 Geçici dosyalar
+*.swp
+*.bak
+*.tmp
+
+
+backend/cache/
+
+# 👉 Debug çıktı dosyaları
+backend/debug_output/
