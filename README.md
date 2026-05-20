@@ -1,79 +1,89 @@
-# 🎬 YouTube Smart Subtitles
+# YouTube Smart Subtitles
 
-YouTube videolarından otomatik altyazı çıkarma ve Türkçe'ye çeviri yapan uygulama.
+YouTube videolarından ses alıp otomatik altyazı çıkaran ve İngilizce metni Türkçe'ye çeviren FastAPI tabanlı servis.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+## Özellikler
 
-## ✨ Özellikler
+- YouTube ses indirme (`yt-dlp`)
+- Whisper ile transkripsiyon
+- MarianMT ile İngilizce → Türkçe çeviri
+- Basit cache mekanizması
+- Chrome extension ile entegrasyon
 
-- 🎵 **YouTube Ses İndirme** - yt-dlp ile yüksek kaliteli ses çıkarma
-- 🎙️ **Otomatik Transkripsiyon** - OpenAI Whisper ile konuşmayı metne çevirme
-- 🌍 **Türkçe Çeviri** - MarianMT (Helsinki-NLP) ile İngilizce → Türkçe çeviri
-- ⚡ **Akıllı Cache** - Video bazlı önbellekleme ile hızlı yanıt
-- 🔌 **Chrome Extension** - YouTube'da doğrudan kullanım
+## Proje Yapısı
 
-## 📁 Proje Yapısı
+- `/home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend` → API servisi
+- `/home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/youtube-extension` → Chrome eklentisi
 
-```
-VideoTranslate/
-├── backend/
-│   ├── app/
-│   │   ├── main.py                 # FastAPI uygulaması
-│   │   ├── config.py               # Yapılandırma ayarları
-│   │   ├── models/                 # Pydantic şemaları
-│   │   ├── services/               # İş mantığı servisleri
-│   │   │   ├── youtube_service.py      # YouTube ses indirme
-│   │   │   ├── transcription_service.py # Whisper transkripsiyon
-│   │   │   ├── translation_service.py   # MarianMT çeviri
-│   │   │   └── cache_service.py         # Cache yönetimi
-│   │   ├── routers/                # API endpoint'leri
-│   │   └── utils/                  # Yardımcı fonksiyonlar
-│   ├── requirements.txt
-│   └── run.py
-│
-└── youtube-extension/              # Chrome eklentisi
-    ├── manifest.json
-    ├── background.js
-    └── content.js
-```
-
-## 🚀 Kurulum
-
-### Gereksinimler
-
-- Python 3.10+
-- FFmpeg (ses işleme için)
-
-### Adımlar
+## Lokal (Python) Çalıştırma
 
 ```bash
-# 1. Repoyu klonla
-git clone https://github.com/kamillsen/Youtbe-AltYazi.git
-cd Youtbe-AltYazi/VideoTranslate/backend
-
-# 2. Sanal ortam oluştur ve aktif et
+cd /home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend
 python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
-
-# 3. Bağımlılıkları kur
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# 4. Uygulamayı başlat
 python run.py
 ```
 
-## 📡 API Kullanımı
+API: `http://127.0.0.1:8000`  
+Docs: `http://127.0.0.1:8000/docs`
 
-### Endpoint
+---
 
+## Docker ile Çalıştırma (Offline + GPU 0)
+
+Aşağıdaki Dockerfile build sırasında gerekli model/artifact indirmelerini yapar:
+
+- Whisper `base` modeli
+- MarianMT `Helsinki-NLP/opus-tatoeba-en-tr`
+- NLTK: `punkt`, `punkt_tab`
+
+Bu sayede image build edildikten sonra container internet olmadan çalışır.
+
+### 1) Build
+
+```bash
+cd /home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend
+docker build -t youtube-smart-subtitles:offline-gpu0 .
 ```
-POST /send_url
+
+### 2) Çalıştır (yalnızca GPU 0)
+
+```bash
+docker run --rm \
+  --gpus '"device=0"' \
+  -e CUDA_VISIBLE_DEVICES=0 \
+  -p 8000:8000 \
+  youtube-smart-subtitles:offline-gpu0
 ```
 
-### Request
+Servis container içinde `0.0.0.0:8000` üzerinde açılır.
+
+### 3) Offline makineye taşıma
+
+Online makinede image’ı export et:
+
+```bash
+docker save youtube-smart-subtitles:offline-gpu0 -o youtube-smart-subtitles-offline-gpu0.tar
+```
+
+Offline makinede import et:
+
+```bash
+docker load -i youtube-smart-subtitles-offline-gpu0.tar
+```
+
+Sonra yine aynı `docker run` komutuyla başlat.
+
+> Not: Offline makinede NVIDIA driver + nvidia-container-toolkit kurulu olmalıdır.
+
+---
+
+## API
+
+### `POST /send_url`
+
+Request:
 
 ```json
 {
@@ -81,64 +91,25 @@ POST /send_url
 }
 ```
 
-### Response
+Örnek response:
 
 ```json
 {
-  "video_id": "VIDEO_ID",
-  "segments": [
+  "success": true,
+  "cached": false,
+  "subtitles": [
     {
       "start": 0.0,
-      "end": 3.5,
-      "text": "Hello everyone",
-      "translated": "Herkese merhaba"
+      "end": 2.5,
+      "text": "Hello world",
+      "translation": "Merhaba dünya"
     }
   ]
 }
 ```
 
-### Swagger Docs
+Health: `GET /health`
 
-API başlatıldıktan sonra: http://127.0.0.1:8000/docs
+## Lisans
 
-## 🔧 Yapılandırma
-
-`app/config.py` dosyasından ayarları değiştirebilirsin:
-
-| Ayar | Varsayılan | Açıklama |
-|------|------------|----------|
-| `WHISPER_MODEL_SIZE` | `base` | Whisper model boyutu (tiny/base/small/medium/large) |
-| `TRANSLATION_MODEL_NAME` | `Helsinki-NLP/opus-tatoeba-en-tr` | Çeviri modeli |
-| `CACHE_MAX_SIZE` | `4` | Maksimum cache'de tutulacak video sayısı |
-
-## 🧩 Chrome Extension Kurulumu
-
-1. Chrome'da `chrome://extensions` adresine git
-2. "Geliştirici modu"nu aç
-3. "Paketlenmemiş öğe yükle" tıkla
-4. `youtube-extension` klasörünü seç
-
-## 📊 Veri Akışı
-
-```
-YouTube URL → Ses İndirme → Whisper Transkripsiyon → MarianMT Çeviri → JSON Response
-                                    ↓
-                              Cache'e Kaydet
-```
-
-## 🛠️ Teknolojiler
-
-- **Backend:** FastAPI, Uvicorn
-- **Transkripsiyon:** OpenAI Whisper
-- **Çeviri:** Hugging Face Transformers (MarianMT)
-- **Ses İndirme:** yt-dlp
-- **Extension:** Chrome Manifest V3
-
-## 📄 Lisans
-
-MIT License
-
----
-
-⭐ Beğendiysen yıldız atmayı unutma!
-
+MIT
