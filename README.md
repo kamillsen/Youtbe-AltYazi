@@ -112,4 +112,4 @@ Health: `GET /health`
 
 ## Lisans
 
-MIT
+Bu proje [MIT License](./LICENSE) ile lisanslanmıştır.
