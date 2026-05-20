@@ -8,8 +8,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TRANSFORMERS_CACHE=/opt/huggingface \
     WHISPER_CACHE_DIR=/opt/whisper \
     NLTK_DATA=/opt/nltk_data \
-    TRANSFORMERS_OFFLINE=1 \
-    HF_HUB_OFFLINE=1 \
     CUDA_VISIBLE_DEVICES=0
 
 WORKDIR /app
@@ -22,14 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# CUDA destekli Torch (GPU kullanımı için)
-RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install --index-url https://download.pytorch.org/whl/cu121 torch
-
 COPY requirements.txt .
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --upgrade pip \
+    && python3 -m pip install -r requirements.txt
 
-# Model ve veri ön indirme (offline çalışma için)
+# Pre-download models and data for offline operation
 RUN python3 - <<'PY'
 import os
 import whisper
@@ -52,11 +47,14 @@ model_name = 'Helsinki-NLP/opus-tatoeba-en-tr'
 MarianTokenizer.from_pretrained(model_name, cache_dir='/opt/huggingface')
 MarianMTModel.from_pretrained(model_name, cache_dir='/opt/huggingface')
 
-print('Offline assets hazır.')
+print('Offline assets ready.')
 PY
 
 COPY app ./app
 COPY run.py ./run.py
+
+ENV TRANSFORMERS_OFFLINE=1 \
+    HF_HUB_OFFLINE=1
 
 EXPOSE 8000
 

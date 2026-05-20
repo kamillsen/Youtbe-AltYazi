@@ -12,13 +12,13 @@ YouTube videolarından ses alıp otomatik altyazı çıkaran ve İngilizce metni
 
 ## Proje Yapısı
 
-- `/home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend` → API servisi
-- `/home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/youtube-extension` → Chrome eklentisi
+- `VideoTranslate/backend` → API servisi
+- `VideoTranslate/youtube-extension` → Chrome eklentisi
 
 ## Lokal (Python) Çalıştırma
 
 ```bash
-cd /home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend
+cd VideoTranslate/backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -43,7 +43,7 @@ Bu sayede image build edildikten sonra container internet olmadan çalışır.
 ### 1) Build
 
 ```bash
-cd /home/runner/work/Youtbe-AltYazi/Youtbe-AltYazi/VideoTranslate/backend
+cd VideoTranslate/backend
 docker build -t youtube-smart-subtitles:offline-gpu0 .
 ```
 
